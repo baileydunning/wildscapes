@@ -1,0 +1,11 @@
+rest: true
+
+graphqlSchema:
+  files: 'schema.graphql'
+
+jsResource:
+  files: 'resources.js'
+
+static:
+  files: 'web/dist/**/*'
+  urlPath: '/'

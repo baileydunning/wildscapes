@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 40 20% 96%;
+    --foreground: 200 15% 18%;
+
+    --card: 40 25% 98%;
+    --card-foreground: 200 15% 18%;
+
+    --popover: 40 25% 98%;
+    --popover-foreground: 200 15% 18%;
+
+    --primary: 150 35% 32%;
+    --primary-foreground: 40 20% 96%;
+
+    --secondary: 35 20% 88%;
+    --secondary-foreground: 200 15% 22%;
+
+    --muted: 40 12% 90%;
+    --muted-foreground: 200 10% 45%;
+
+    --accent: 35 45% 55%;
+    --accent-foreground: 35 40% 15%;
+
+    --destructive: 0 50% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 12% 82%;
+    --input: 40 12% 82%;
+    --ring: 150 35% 32%;
+
+    --radius: 0.5rem;
+
+    /* Exact terrain colors as specified */
+    --terrain-field: 45 72% 67%;
+    --terrain-water: 212 63% 57%;
+    --terrain-mountain: 220 6% 58%;
+    --terrain-trunk: 28 52% 36%;
+    --terrain-treetop: 120 36% 36%;
+    --terrain-red: 0 52% 53%;
+
+    --board-bg: 40 15% 91%;
+    --slot-bg: 35 18% 87%;
+    --hex-bg: 40 12% 93%;
+    --hex-border: 40 10% 80%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 200 15% 10%;
+    --foreground: 40 20% 92%;
+
+    --card: 200 12% 14%;
+    --card-foreground: 40 20% 92%;
+
+    --popover: 200 12% 14%;
+    --popover-foreground: 40 20% 92%;
+
+    --primary: 150 40% 45%;
+    --primary-foreground: 200 15% 10%;
+
+    --secondary: 35 18% 25%;
+    --secondary-foreground: 40 20% 92%;
+
+    --muted: 200 10% 20%;
+    --muted-foreground: 40 12% 60%;
+
+    --accent: 35 40% 50%;
+    --accent-foreground: 35 40% 10%;
+
+    --destructive: 0 45% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 10% 22%;
+    --input: 200 10% 22%;
+    --ring: 150 40% 45%;
+
+    --board-bg: 200 10% 12%;
+    --slot-bg: 200 8% 16%;
+    --hex-bg: 200 8% 15%;
+    --hex-border: 200 6% 25%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  .terrain-token {
+    @apply transition-all duration-150 cursor-pointer border-2;
+  }
+
+  .terrain-field {
+    background-color: #E7C86E;
+    border-color: #D4B85A;
+  }
+
+  .terrain-water {
+    background-color: #4C8FD6;
+    border-color: #3A7BC4;
+  }
+
+  .terrain-mountain {
+    background-color: #8A8F99;
+    border-color: #7A7F89;
+  }
+
+  .terrain-trunk {
+    background-color: #8B5A2B;
+    border-color: #7A4A1B;
+  }
+
+  .terrain-treetop {
+    background-color: #3A7F3A;
+    border-color: #2A6F2A;
+  }
+
+  .terrain-red {
+    background-color: #C44848;
+    border-color: #B43838;
+  }
+
+  .hex-cell {
+    @apply relative transition-all duration-150;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .hex-cell-inner {
+    @apply absolute inset-[2px];
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .game-card {
+    @apply rounded-lg bg-card border border-border/60 overflow-hidden shadow-sm;
+  }
+
+  .pattern-dots {
+    background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
+    background-size: 10px 10px;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
