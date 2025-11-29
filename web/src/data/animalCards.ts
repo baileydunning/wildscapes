@@ -101,7 +101,7 @@ export const animalCards: AnimalCard[] = [
     imageUrl: '',
     description: 'Stalks rocky clearings and brushy fields.',
     canRotate: true,
-    emoji: '🐈',
+    emoji: '🐱',
     frameColors: { primary: '#A16207', secondary: '#FEF3C7' },
   },
   {
@@ -117,7 +117,7 @@ export const animalCards: AnimalCard[] = [
     imageUrl: '',
     description: 'Silent hunter weaving through tall conifers.',
     canRotate: true,
-    emoji: '🐈‍⬛',
+    emoji: '🐯',
     frameColors: { primary: '#7C3AED', secondary: '#EDE9FE' },
   },
   {
@@ -166,7 +166,7 @@ export const animalCards: AnimalCard[] = [
     imageUrl: '',
     description: 'Dashes between burrows and forest floors.',
     canRotate: true,
-    emoji: '🐿️',
+    emoji: '🐹',
     frameColors: { primary: '#F97316', secondary: '#FFEDD5' },
   },
   {
@@ -343,9 +343,9 @@ export const animalCards: AnimalCard[] = [
     frameColors: { primary: '#14B8A6', secondary: '#CCFBF1' },
   },
   {
-    id: 'sandhill-crane',
-    name: 'Sandhill Crane',
-    species: 'Antigone canadensis',
+    id: 'flamingo',
+    name: 'Flamingo',
+    species: 'Phoenicopterus roseus',
     habitat: [
       { terrain: 'field', stackLevel: 0, relativePos: { q: 0, r: 0 } },
       { terrain: 'water', stackLevel: 0, relativePos: { q: 1, r: 0 } },
@@ -354,10 +354,10 @@ export const animalCards: AnimalCard[] = [
     cubesRequired: 3,
     points: 5,
     imageUrl: '',
-    description: 'Steps through wetlands and open meadows.',
+    description: 'Wades through shallow lakes and marshes, feeding in flocks.',
     canRotate: true,
-    emoji: '🐦',
-    frameColors: { primary: '#06B6D4', secondary: '#E0F2FE' },
+    emoji: '🦩',
+    frameColors: { primary: '#F472B6', secondary: '#FCE7F3' },
   },
 
   // -------------------------------------------------------
@@ -462,7 +462,7 @@ export const animalCards: AnimalCard[] = [
     imageUrl: '',
     description: 'Drums loudly on old forest trees.',
     canRotate: true,
-    emoji: '🐦',
+    emoji: '🐓',
     frameColors: { primary: '#DC2626', secondary: '#FEE2E2' },
   },
   {
@@ -499,7 +499,7 @@ export const animalCards: AnimalCard[] = [
     imageUrl: '',
     description: 'Nests under eaves and forages in open yards.',
     canRotate: true,
-    emoji: '🐦',
+    emoji: '🐥',
     frameColors: { primary: '#D97706', secondary: '#FEF3C7' },
   },
   {
@@ -532,7 +532,7 @@ export const animalCards: AnimalCard[] = [
     imageUrl: '',
     description: 'Builds huge nests on rooftops near wetlands.',
     canRotate: true,
-    emoji: '🕊️',
+    emoji: '🐣',
     frameColors: { primary: '#F43F5E', secondary: '#FFE4E6' },
   },
   {

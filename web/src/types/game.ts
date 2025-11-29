@@ -1,3 +1,5 @@
+import type { BoardStats, AnimalStats, OverallGameStats } from '@/types/player';
+
 export type TerrainType = 'field' | 'water' | 'mountain' | 'trunk' | 'treetop' | 'building';
 
 export interface TerrainToken {
@@ -87,10 +89,13 @@ export interface GameState {
   soloMode: boolean;
   selectedAnimalCardId: string | null;
   selectedHabitatIndex: number | null;
+  boardStats?: BoardStats;
+  animalStats?: AnimalStats;
+  overallStats?: OverallGameStats;
 }
 
 export type GameAction =
-  | { type: 'START_GAME'; players: { name: string; color: string }[]; soloMode?: boolean }
+  | { type: 'START_GAME'; players: { name: string; color: string; dbPlayerId: string }[]; soloMode?: boolean }
   | { type: 'SELECT_SLOT'; slotId: number }
   | { type: 'PLACE_TOKEN'; position: HexPosition; tokenIndex: number }
   | { type: 'TAKE_ANIMAL_CARD'; cardId: string }

@@ -91,6 +91,17 @@ function PlaceableEmoji({
   );
 }
 
+// Small hex axial projection, matching the HexGrid orientation
+function cardHexToPixel(
+  pos: { q: number; r: number },
+  size: number
+): { x: number; y: number } {
+  const { q, r } = pos;
+  const x = size * (1.5 * q);
+  const y = size * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r);
+  return { x, y };
+}
+
 export function AnimalCard({ 
   card, 
   onClick, 
@@ -115,26 +126,35 @@ export function AnimalCard({
     primary: '#6B7280',   // default gray
     secondary: '#F3F4F6', // default light background
   };
-  
-  // Organize habitat cells by their relative positions for visual layout
-  const minQ = Math.min(...card.habitat.map(h => h.relativePos.q));
-  const maxQ = Math.max(...card.habitat.map(h => h.relativePos.q));
-  const minR = Math.min(...card.habitat.map(h => h.relativePos.r));
-  const maxR = Math.max(...card.habitat.map(h => h.relativePos.r));
-  
-  const cols = maxQ - minQ + 1;
-  const rows = maxR - minR + 1;
-  
-  // Create a grid layout
-  const grid: (HabitatCell & { index: number } | null)[][] = Array(rows)
-    .fill(null)
-    .map(() => Array(cols).fill(null));
-  
-  card.habitat.forEach((cell, index) => {
-    const col = cell.relativePos.q - minQ;
-    const row = cell.relativePos.r - minR;
-    grid[row][col] = { ...cell, index };
+
+  // Mini hex-map layout for the habitat (so it matches the real board)
+  const hexSize = compact ? 9 : 11;
+
+  const rawHexes = card.habitat.map((cell, index) => {
+    const { x, y } = cardHexToPixel(cell.relativePos, hexSize);
+    return { cell, index, x, y };
   });
+
+  let miniWidth = 0;
+  let miniHeight = 0;
+  let positionedHexes: { cell: HabitatCell; index: number; x: number; y: number }[] = [];
+
+  if (rawHexes.length > 0) {
+    const minX = Math.min(...rawHexes.map(h => h.x));
+    const maxX = Math.max(...rawHexes.map(h => h.x));
+    const minY = Math.min(...rawHexes.map(h => h.y));
+    const maxY = Math.max(...rawHexes.map(h => h.y));
+
+    const padding = hexSize * 2;
+    miniWidth = (maxX - minX) + padding * 2;
+    miniHeight = (maxY - minY) + padding * 2;
+
+    positionedHexes = rawHexes.map(h => ({
+      ...h,
+      x: h.x - minX + padding,
+      y: h.y - minY + padding,
+    }));
+  }
 
   // Create array of emoji slots for "Animals to Place"
   const emojiSlots = Array.from({ length: totalRequired }, (_, index) => ({
@@ -243,35 +263,55 @@ export function AnimalCard({
           )}
         </div>
         
-        {/* Grid layout matching habitat pattern */}
-        <div 
-          className="inline-grid gap-1"
-          style={{ 
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          }}
-        >
-          {grid.map((row, rowIdx) => 
-            row.map((cell, colIdx) => {
-              if (!cell) {
-                return (
-                  <div
-                    key={`${rowIdx}-${colIdx}`}
-                    className={cn(compact ? 'w-5 h-5' : 'w-6 h-6')}
-                  />
-                );
-              }
-              
+        {/* Mini hex board that matches the real hex layout */}
+        {positionedHexes.length > 0 && (
+          <div
+            className="relative mx-auto mb-2"
+            style={{
+              width: miniWidth,
+              height: miniHeight,
+            }}
+          >
+            {positionedHexes.map(({ cell, index, x, y }) => {
+              const bgColor = terrainColors[cell.terrain];
+              const stackLabel = cell.stackLevel > 0 ? `H${cell.stackLevel + 1}` : '';
+
               return (
-                <HabitatToken
-                  key={`${rowIdx}-${colIdx}`}
-                  cell={cell}
-                  compact={compact}
-                />
+                <div
+                  key={index}
+                  className="absolute"
+                  style={{
+                    left: x - hexSize,
+                    top: y - hexSize,
+                    width: hexSize * 2,
+                    height: hexSize * 2,
+                  }}
+                >
+                  <div
+                    className="hex-cell w-full h-full"
+                    style={{
+                      backgroundColor: bgColor,
+                    }}
+                  >
+                    <div
+                      className="hex-cell-inner flex items-center justify-center"
+                      style={{
+                        backgroundColor: bgColor,
+                      }}
+                    >
+                      {stackLabel && (
+                        <span className="text-[8px] font-semibold text-white drop-shadow-sm">
+                          {stackLabel}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               );
-            })
-          )}
-        </div>
-        
+            })}
+          </div>
+        )}
+
         {/* Terrain legend */}
         <div className={cn('flex flex-wrap gap-1.5 mt-2', compact && 'gap-1 mt-1')}>
           {Array.from(new Set(card.habitat.map(h => h.terrain))).map(terrain => (

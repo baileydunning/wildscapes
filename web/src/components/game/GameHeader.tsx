@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
 import { PlayerState } from '@/types/game';
+import { cn } from '@/lib/utils';
+import { BarChart3 } from 'lucide-react';
 
 type ScoreBreakdownItem = {
   label: string;
@@ -65,17 +67,20 @@ export function GameHeader({
     <header className="bg-card border-b border-border sticky top-0 z-50 font-sans">
       <div className="container mx-auto px-3 py-2">
         <div className="flex items-center justify-between gap-3">
+          {/* Game title / round */}
           <div>
             <h1 className="font-semibold text-lg text-foreground">Wildscapes</h1>
             <p className="text-xs text-muted-foreground">Round {roundNumber}</p>
           </div>
 
+          {/* Phase label */}
           <div className="hidden sm:block px-3 py-1 bg-primary/10 rounded">
             <p className="text-xs font-medium text-primary">
               {phaseLabels[turnPhase] || turnPhase}
             </p>
           </div>
 
+          {/* Player pills with score dialog */}
           <div className="flex items-center gap-2">
             {players.map((player, i) => (
               <Dialog
@@ -150,10 +155,16 @@ export function GameHeader({
             ))}
           </div>
 
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">
-              Bag: {tokensRemaining}
-            </p>
+          {/* Right side: bag, stats link, player header */}
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-muted-foreground">Bag: {tokensRemaining}</p>
+            <Link
+              to="/stats"
+              className="p-1.5 rounded hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              title="View Stats"
+            >
+              <BarChart3 className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </div>

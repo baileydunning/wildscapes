@@ -1,7 +1,22 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { GameState, GameAction, TerrainToken, TerrainType, TokenSlot, HexPosition, PlacedToken, PlacedAnimalEmoji } from '@/types/game';
+import {
+  GameState,
+  GameAction,
+  TerrainToken,
+  TerrainType,
+  TokenSlot,
+  HexPosition,
+  PlacedToken,
+  PlacedAnimalEmoji,
+} from '@/types/game';
 import { animalCards, shuffleArray } from '@/data/animalCards';
-import { scoreTrees, scoreMountains, scoreFields, scoreBuildings, scoreRivers } from '@/lib/environmentScoring';
+import {
+  scoreTrees,
+  scoreMountains,
+  scoreFields,
+  scoreBuildings,
+  scoreRivers,
+} from '@/lib/environmentScoring';
 
 const TOKEN_COUNTS: Record<TerrainType, number> = {
   field: 15,
@@ -28,13 +43,19 @@ function generateTokenBag(): TerrainToken[] {
   return shuffleArray(tokens);
 }
 
-function drawTokens(bag: TerrainToken[], count: number): { drawn: TerrainToken[]; remaining: TerrainToken[] } {
+function drawTokens(
+  bag: TerrainToken[],
+  count: number
+): { drawn: TerrainToken[]; remaining: TerrainToken[] } {
   const drawn = bag.slice(0, count);
   const remaining = bag.slice(count);
   return { drawn, remaining };
 }
 
-function createInitialSlots(bag: TerrainToken[], slotCount: number): { slots: TokenSlot[]; remaining: TerrainToken[] } {
+function createInitialSlots(
+  bag: TerrainToken[],
+  slotCount: number
+): { slots: TokenSlot[]; remaining: TerrainToken[] } {
   const slots: TokenSlot[] = [];
   let currentBag = [...bag];
   for (let i = 0; i < slotCount; i++) {
@@ -62,7 +83,10 @@ const initialState: GameState = {
   selectedHabitatIndex: null,
 };
 
-function canPlaceTokenOnStack(existingStack: PlacedToken[], newTokenType: TerrainType): boolean {
+function canPlaceTokenOnStack(
+  existingStack: PlacedToken[],
+  newTokenType: TerrainType
+): boolean {
   const stackHeight = existingStack.length;
   if (stackHeight === 0) return true;
 
@@ -73,7 +97,7 @@ function canPlaceTokenOnStack(existingStack: PlacedToken[], newTokenType: Terrai
   if (topType === 'field' || topType === 'water') return false;
   if (newTokenType === 'field' || newTokenType === 'water') return false;
 
-  // Cannot stack on treetop or building roof
+  // Cannot stack on treetop
   if (topType === 'treetop') return false;
 
   // Building logic: allow building roof on trunk, mountain, or building base
@@ -96,14 +120,18 @@ function canPlaceTokenOnStack(existingStack: PlacedToken[], newTokenType: Terrai
   return false;
 }
 
-function canPlaceToken(board: PlacedToken[], position: HexPosition, tokenType: TerrainType): { canPlace: boolean; stackLevel: number } {
+function canPlaceToken(
+  board: PlacedToken[],
+  position: HexPosition,
+  tokenType: TerrainType
+): { canPlace: boolean; stackLevel: number } {
   const existingAtPosition = board
-    .filter((p) => p.position.q === position.q && p.position.r === position.r)
+    .filter(p => p.position.q === position.q && p.position.r === position.r)
     .sort((a, b) => a.stackLevel - b.stackLevel);
-  
+
   const stackLevel = existingAtPosition.length;
   if (stackLevel >= 3) return { canPlace: false, stackLevel };
-  
+
   const canPlace = canPlaceTokenOnStack(existingAtPosition, tokenType);
   return { canPlace, stackLevel };
 }
@@ -115,69 +143,22 @@ function isValidBoardPosition(pos: HexPosition): boolean {
   return absQ <= 3 && absR <= 3 && absS <= 3;
 }
 
-function calculateScore(state: GameState, playerIndex: number): number {
-  const player = state.players[playerIndex];
-  let score = 0;
-  const board = player.board;
-  
-  for (const card of player.completedCards) {
-    score += card.points;
-  }
-  
-  const positionsWithTreetop = new Set<string>();
-  for (const token of board) {
-    if (token.token.type === 'treetop') {
-      const key = `${token.position.q},${token.position.r}`;
-      const stack = board.filter(t => t.position.q === token.position.q && t.position.r === token.position.r);
-      const hasTrunk = stack.some(t => t.token.type === 'trunk' && t.stackLevel < token.stackLevel);
-      if (hasTrunk) positionsWithTreetop.add(key);
-    }
-  }
-  score += positionsWithTreetop.size * 2;
-  
-  for (const token of board) {
-    if (token.token.type === 'building' && token.stackLevel > 0) score += 3;
-  }
-  
-  const mountainHeights = new Map<string, number>();
-  for (const token of board) {
-    if (token.token.type === 'mountain') {
-      const key = `${token.position.q},${token.position.r}`;
-      const current = mountainHeights.get(key) || 0;
-      mountainHeights.set(key, Math.max(current, token.stackLevel + 1));
-    }
-  }
-  for (const height of mountainHeights.values()) score += height;
-  
-  score += board.filter(t => t.token.type === 'water').length;
-  score += board.filter(t => t.token.type === 'field').length * 2;
-  
-    // Animal scoring: points * cubes placed, +3 bonus if all cubes placed
-    let animalScore = 0;
-    for (const card of player.completedCards) {
-      // Count cubes placed for this card
-      const placed = player.placedEmojis.filter(e => e.cardId === card.id).length;
-      const totalCubes = card.cubesRequired;
-      let cardScore = card.points * placed;
-      if (placed === totalCubes) cardScore += 3;
-      animalScore += cardScore;
-    }
-    return score + animalScore;
-}
-
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START_GAME': {
       const soloMode = action.soloMode || action.players.length === 1;
       const slotCount = soloMode ? SLOTS_SOLO : SLOTS_NORMAL;
       const faceUpCount = soloMode ? FACE_UP_SOLO : FACE_UP_NORMAL;
-      
+
       const tokenBag = generateTokenBag();
       const { slots, remaining } = createInitialSlots(tokenBag, slotCount);
       const shuffledAnimals = shuffleArray([...animalCards]);
-      
+
       const players = action.players.map((p, i) => ({
+        // local runtime/seat id, used for turn order & rendering
         id: `player-${i}`,
+        // Harper Player.id from the database
+        dbPlayerId: p.dbPlayerId,
         name: p.name,
         color: p.color,
         board: [],
@@ -187,7 +168,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         completedCards: [],
         score: 0,
       }));
-      
+
       return {
         ...state,
         phase: 'playing',
@@ -202,7 +183,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         selectedHabitatIndex: null,
       };
     }
-    
+
     case 'SELECT_SLOT': {
       const slot = state.centralSlots.find(s => s.id === action.slotId);
       if (!slot || slot.tokens.length === 0) return state;
@@ -213,103 +194,143 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         turnPhase: 'placeTokens',
       };
     }
-    
+
     case 'PLACE_TOKEN': {
       if (state.tokensToPlace.length === 0) return state;
       const token = state.tokensToPlace[action.tokenIndex];
       if (!token) return state;
-      
+
       const currentPlayer = state.players[state.currentPlayerIndex];
-      const { canPlace, stackLevel } = canPlaceToken(currentPlayer.board, action.position, token.type);
+      const { canPlace, stackLevel } = canPlaceToken(
+        currentPlayer.board,
+        action.position,
+        token.type
+      );
       if (!canPlace || !isValidBoardPosition(action.position)) return state;
-      
+
       // Check if position has an animal emoji
       const hasEmoji = currentPlayer.placedEmojis.some(
         e => e.position.q === action.position.q && e.position.r === action.position.r
       );
       if (hasEmoji) return state;
-      
-      const newBoard = [...currentPlayer.board, { token, position: action.position, stackLevel }];
-      const newTokensToPlace = state.tokensToPlace.filter((_, i) => i !== action.tokenIndex);
-      const newPlayers = state.players.map((p, i) => i === state.currentPlayerIndex ? { ...p, board: newBoard } : p);
-      const newTurnPhase = newTokensToPlace.length === 0 ? 'takeCard' : 'placeTokens';
-      
-      return { ...state, players: newPlayers, tokensToPlace: newTokensToPlace, turnPhase: newTurnPhase };
+
+      const newBoard = [
+        ...currentPlayer.board,
+        { token, position: action.position, stackLevel },
+      ];
+      const newTokensToPlace = state.tokensToPlace.filter(
+        (_, i) => i !== action.tokenIndex
+      );
+      const newPlayers = state.players.map((p, i) =>
+        i === state.currentPlayerIndex ? { ...p, board: newBoard } : p
+      );
+      const newTurnPhase =
+        newTokensToPlace.length === 0 ? 'takeCard' : 'placeTokens';
+
+      return {
+        ...state,
+        players: newPlayers,
+        tokensToPlace: newTokensToPlace,
+        turnPhase: newTurnPhase,
+      };
     }
-    
+
     case 'TAKE_ANIMAL_CARD': {
       if (state.turnPhase !== 'takeCard') return state;
       const currentPlayer = state.players[state.currentPlayerIndex];
-      if (currentPlayer.handCards.length >= 4) return state;
-      
+      // If player already has 4 animal cards, skip to placeCubes phase
+      if (currentPlayer.handCards.length >= 4) {
+        return { ...state, turnPhase: 'placeCubes' };
+      }
+
       const card = state.faceUpAnimals.find(c => c.id === action.cardId);
       if (!card) return state;
-      
+
       const newHand = [...currentPlayer.handCards, card];
       const newFaceUp = state.faceUpAnimals.filter(c => c.id !== action.cardId);
-      const newPlayers = state.players.map((p, i) => i === state.currentPlayerIndex ? { ...p, handCards: newHand } : p);
-      
-      return { ...state, players: newPlayers, faceUpAnimals: newFaceUp, turnPhase: 'placeCubes' };
+      const newPlayers = state.players.map((p, i) =>
+        i === state.currentPlayerIndex ? { ...p, handCards: newHand } : p
+      );
+
+      return {
+        ...state,
+        players: newPlayers,
+        faceUpAnimals: newFaceUp,
+        turnPhase: 'placeCubes',
+      };
     }
-    
+
     case 'SKIP_TAKE_CARD': {
       if (state.turnPhase !== 'takeCard') return state;
       return { ...state, turnPhase: 'placeCubes' };
     }
-    
+
     case 'SELECT_HABITAT_CELL': {
       if (state.turnPhase !== 'placeCubes') return state;
       const currentPlayer = state.players[state.currentPlayerIndex];
       const card = currentPlayer.handCards.find(c => c.id === action.cardId);
       if (!card) return state;
-      
+
       // Check if this habitat cell already has an emoji placed
       const alreadyPlaced = currentPlayer.placedEmojis.some(
         e => e.cardId === action.cardId && e.habitatIndex === action.habitatIndex
       );
       if (alreadyPlaced) return state;
-      
+
       return {
         ...state,
         selectedAnimalCardId: action.cardId,
         selectedHabitatIndex: action.habitatIndex,
       };
     }
-    
+
     case 'PLACE_ANIMAL_EMOJI': {
       if (state.turnPhase !== 'placeCubes') return state;
-      if (state.selectedAnimalCardId === null || state.selectedHabitatIndex === null) return state;
-      
+      if (
+        state.selectedAnimalCardId === null ||
+        state.selectedHabitatIndex === null
+      )
+        return state;
+
       const currentPlayer = state.players[state.currentPlayerIndex];
-      const card = currentPlayer.handCards.find(c => c.id === state.selectedAnimalCardId);
+      const card = currentPlayer.handCards.find(
+        c => c.id === state.selectedAnimalCardId
+      );
       if (!card) return state;
-      
+
       const habitatCell = card.habitat[state.selectedHabitatIndex];
       if (!habitatCell) return state;
-      
+
       // Validate the board position matches the required terrain and stack level
       const tokensAtPosition = currentPlayer.board
-        .filter(t => t.position.q === action.position.q && t.position.r === action.position.r)
+        .filter(
+          t =>
+            t.position.q === action.position.q &&
+            t.position.r === action.position.r
+        )
         .sort((a, b) => a.stackLevel - b.stackLevel);
-      
+
       if (tokensAtPosition.length === 0) return state;
-      
+
       const topToken = tokensAtPosition[tokensAtPosition.length - 1];
       const stackHeight = tokensAtPosition.length;
-      
+
       // Check terrain type matches
       if (topToken.token.type !== habitatCell.terrain) return state;
-      
+
       // Check stack level matches (stackLevel in habitat is 0-indexed for flat, 1+ for stacks)
       if (habitatCell.stackLevel === 0 && stackHeight !== 1) return state;
-      if (habitatCell.stackLevel > 0 && stackHeight < habitatCell.stackLevel + 1) return state;
-      
+      if (habitatCell.stackLevel > 0 && stackHeight < habitatCell.stackLevel + 1)
+        return state;
+
       // Check if position already has an emoji
       const posHasEmoji = currentPlayer.placedEmojis.some(
-        e => e.position.q === action.position.q && e.position.r === action.position.r
+        e =>
+          e.position.q === action.position.q &&
+          e.position.r === action.position.r
       );
       if (posHasEmoji) return state;
-      
+
       // Place the emoji
       const newEmoji: PlacedAnimalEmoji = {
         cardId: state.selectedAnimalCardId,
@@ -317,27 +338,32 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         emoji: card.emoji,
         habitatIndex: state.selectedHabitatIndex,
       };
-      
+
       const newPlacedEmojis = [...currentPlayer.placedEmojis, newEmoji];
-      
+
       // Check if card is completed (all habitat cells have emojis)
       const emojisForCard = newPlacedEmojis.filter(e => e.cardId === card.id);
       const isCardCompleted = emojisForCard.length === card.habitat.length;
-      
+
       let newHandCards = currentPlayer.handCards;
       let newCompletedCards = currentPlayer.completedCards;
-      
+
       if (isCardCompleted) {
         newHandCards = currentPlayer.handCards.filter(c => c.id !== card.id);
         newCompletedCards = [...currentPlayer.completedCards, card];
       }
-      
-      const newPlayers = state.players.map((p, i) => 
-        i === state.currentPlayerIndex 
-          ? { ...p, placedEmojis: newPlacedEmojis, handCards: newHandCards, completedCards: newCompletedCards }
+
+      const newPlayers = state.players.map((p, i) =>
+        i === state.currentPlayerIndex
+          ? {
+              ...p,
+              placedEmojis: newPlacedEmojis,
+              handCards: newHandCards,
+              completedCards: newCompletedCards,
+            }
           : p
       );
-      
+
       return {
         ...state,
         players: newPlayers,
@@ -345,12 +371,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         selectedHabitatIndex: null,
       };
     }
-    
+
     case 'SKIP_PLACE_CUBES': {
       if (state.turnPhase !== 'placeCubes') return state;
       return { ...state, selectedAnimalCardId: null, selectedHabitatIndex: null };
     }
-    
+
     case 'END_TURN': {
       let newBag = [...state.tokenBag];
       const newSlots = state.centralSlots.map(slot => {
@@ -361,20 +387,23 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
         return slot;
       });
-      
+
       const faceUpCount = state.soloMode ? FACE_UP_SOLO : FACE_UP_NORMAL;
       const cardsNeeded = faceUpCount - state.faceUpAnimals.length;
       const newCards = state.animalDeck.slice(0, cardsNeeded);
       const newDeck = state.animalDeck.slice(cardsNeeded);
       const newFaceUp = [...state.faceUpAnimals, ...newCards];
-      
+
       const currentPlayer = state.players[state.currentPlayerIndex];
       const emptySpaces = 37 - currentPlayer.board.length;
       const isEndgame = newBag.length < 3 || emptySpaces <= 2;
-      
+
       // Score breakdown for each player
-      const newPlayers = state.players.map((p, i) => {
-        const animalScore = p.completedCards.reduce((sum, card) => sum + card.points, 0);
+      const newPlayers = state.players.map(p => {
+        const animalScore = p.completedCards.reduce(
+          (sum, card) => sum + card.points,
+          0
+        );
         const trees = scoreTrees(p.board);
         const mountains = scoreMountains(p.board);
         const fields = scoreFields(p.board);
@@ -393,9 +422,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           },
         };
       });
-      const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-      const newRound = nextPlayerIndex === 0 ? state.roundNumber + 1 : state.roundNumber;
-      
+
+      const nextPlayerIndex =
+        (state.currentPlayerIndex + 1) % state.players.length;
+      const newRound =
+        nextPlayerIndex === 0 ? state.roundNumber + 1 : state.roundNumber;
+
       return {
         ...state,
         centralSlots: newSlots,
@@ -413,7 +445,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         phase: isEndgame ? 'ended' : 'playing',
       };
     }
-    
+
     default:
       return state;
   }
@@ -422,7 +454,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 interface GameContextType {
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
-  startGame: (players: { name: string; color: string }[], soloMode?: boolean) => void;
+  startGame: (
+    players: { name: string; color: string; dbPlayerId: string }[],
+    soloMode?: boolean
+  ) => void;
   selectSlot: (slotId: number) => void;
   placeToken: (position: HexPosition, tokenIndex: number) => void;
   takeAnimalCard: (cardId: string) => void;
@@ -437,57 +472,68 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
-  
-  const startGame = useCallback((players: { name: string; color: string }[], soloMode?: boolean) => {
-    dispatch({ type: 'START_GAME', players, soloMode });
-  }, []);
-  
+
+  const startGame = useCallback(
+    (
+      players: { name: string; color: string; dbPlayerId: string }[],
+      soloMode?: boolean
+    ) => {
+      dispatch({ type: 'START_GAME', players, soloMode });
+    },
+    []
+  );
+
   const selectSlot = useCallback((slotId: number) => {
     dispatch({ type: 'SELECT_SLOT', slotId });
   }, []);
-  
+
   const placeToken = useCallback((position: HexPosition, tokenIndex: number) => {
     dispatch({ type: 'PLACE_TOKEN', position, tokenIndex });
   }, []);
-  
+
   const takeAnimalCard = useCallback((cardId: string) => {
     dispatch({ type: 'TAKE_ANIMAL_CARD', cardId });
   }, []);
-  
+
   const skipTakeCard = useCallback(() => {
     dispatch({ type: 'SKIP_TAKE_CARD' });
   }, []);
-  
-  const selectHabitatCell = useCallback((cardId: string, habitatIndex: number) => {
-    dispatch({ type: 'SELECT_HABITAT_CELL', cardId, habitatIndex });
-  }, []);
-  
+
+  const selectHabitatCell = useCallback(
+    (cardId: string, habitatIndex: number) => {
+      dispatch({ type: 'SELECT_HABITAT_CELL', cardId, habitatIndex });
+    },
+    []
+  );
+
   const placeAnimalEmoji = useCallback((position: HexPosition) => {
     dispatch({ type: 'PLACE_ANIMAL_EMOJI', position });
   }, []);
-  
+
   const skipPlaceCubes = useCallback(() => {
     dispatch({ type: 'SKIP_PLACE_CUBES' });
   }, []);
-  
+
   const endTurn = useCallback(() => {
     dispatch({ type: 'END_TURN' });
   }, []);
-  
+
   return (
-    <GameContext.Provider value={{
-      state,
-      dispatch,
-      startGame,
-      selectSlot,
-      placeToken,
-      takeAnimalCard,
-      skipTakeCard,
-      selectHabitatCell,
-      placeAnimalEmoji,
-      skipPlaceCubes,
-      endTurn,
-    }}>
+    <GameContext.Provider
+      value={{
+        state,
+        dispatch,
+        startGame,
+        selectSlot,
+        placeToken,
+        takeAnimalCard,
+        skipTakeCard,
+        selectHabitatCell,
+        placeAnimalEmoji,
+        skipPlaceCubes,
+        endTurn,
+      }}
+    >
       {children}
     </GameContext.Provider>
   );

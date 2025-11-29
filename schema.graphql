@@ -1,3 +1,165 @@
-type HighScores @table(database: "wildscapes") @export(name: "highscores") {
-  id: ID! @primaryKey
+type User @table(database: "wildscapes") @export(name: "user") {
+  id: ID @primaryKey
+  displayName: String
+  handle: String @indexed
+  avatarEmoji: String
+  playerIds: [ID] @indexed
+  players: [Player] @relationship(from: playerIds)
+  createdAt: Date @createdTime
+  updatedAt: Date @updatedTime
+}
+
+type Player @table(database: "wildscapes") @export(name: "player") {
+  id: ID @primaryKey
+  userId: ID @indexed
+  user: [User] @relationship(to: playerIds)
+
+  displayName: String
+  avatarEmoji: String
+  colorTheme: String
+
+  totalGamesPlayed: Int
+  totalScore: Int
+  highestScore: Int
+
+  createdAt: Date @createdTime
+  updatedAt: Date @updatedTime
+}
+
+type GameStats @table(database: "wildscapes") @export(name: "game_stats") {
+  id: ID @primaryKey
+  gameId: String @indexed
+  mode: String @indexed
+  createdAt: Date @createdTime
+  updatedAt: Date @updatedTime
+
+  board: BoardStats
+  animals: AnimalStats
+  overall: OverallGameStats
+  players: [PlayerGameStats]
+}
+
+type HexPosition {
+  q: Int
+  r: Int
+}
+
+type BoardStats {
+  totalTokensPlaced: Int
+  fieldTokensPlaced: Int
+  waterTokensPlaced: Int
+  mountainTokensPlaced: Int
+  trunkTokensPlaced: Int
+  treetopTokensPlaced: Int
+  buildingTokensPlaced: Int
+
+  highestStackHeight: Int
+  lowestStackHeight: Int
+  averageStackHeight: Float
+
+  tallestStackPositions: [HexPosition]
+
+  validBuildingStackCount: Int
+  validBuildingStackPositions: [HexPosition]
+  validTreeStackCount: Int
+  validTreeStackPositions: [HexPosition]
+
+  largestFieldGroupSize: Int
+  largestFieldGroupPositions: [HexPosition]
+
+  largestRiverLength: Int
+  largestRiverPositions: [HexPosition]
+
+  largestMountainGroupSize: Int
+  largestMountainGroupPositions: [HexPosition]
+
+  isolatedTileCount: Int
+  isolatedTilePositions: [HexPosition]
+
+  unusedHexCount: Int
+  unusedHexPositions: [HexPosition]
+
+  boardCoveragePercent: Float
+  mostCommonTerrainType: String
+  leastUsedTerrainType: String
+}
+
+type AnimalCardStat {
+  cardId: String @indexed
+  name: String
+  habitatType: String
+  cubesRequired: Int
+  cubesPlaced: Int
+  isCompleted: Boolean
+
+  basePoints: Int
+  bonusPoints: Int
+  totalPoints: Int
+
+  firstCubePlacedTurn: Int
+  completionTurn: Int
+}
+
+type AnimalStats {
+  cardStats: [AnimalCardStat]
+
+  collectedAnimalCount: Int
+  completedAnimalCount: Int
+  partialAnimalCount: Int
+  completionRatePercent: Float
+
+  totalAnimalPoints: Int
+  totalBonusPoints: Int
+  mostValuableAnimalCardId: String
+  mostValuableAnimalPoints: Int
+
+  habitatDiversityCount: Int
+  habitatTypesCompleted: [String]
+
+  forestAnimalsCompleted: Int
+  fieldAnimalsCompleted: Int
+  waterAnimalsCompleted: Int
+  mountainAnimalsCompleted: Int
+  buildingAnimalsCompleted: Int
+
+  averageCubesPerAnimal: Float
+}
+
+type ActionBreakdown {
+  totalActions: Int
+  tokenPlacements: Int
+  animalPlacements: Int
+  cardDraws: Int
+  skippedActions: Int
+}
+
+type PlayerGameStats {
+  playerId: ID @indexed      # references Player.id
+  playerName: String
+
+  finalScore: Int
+  environmentPoints: Int
+  animalPoints: Int
+
+  turnsTaken: Int
+  actions: ActionBreakdown
+
+  rank: Int
+  win: Boolean
+  isLocalPlayer: Boolean
+}
+
+type OverallGameStats {
+  finalScore: Int
+  environmentPoints: Int
+  animalPoints: Int
+
+  turnsTaken: Int
+  totalActions: Int
+  skippedActions: Int
+
+  playerCount: Int
+  averageScorePerPlayer: Float
+
+  gameWasFastestSoFar: Boolean
 }
