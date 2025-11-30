@@ -1,12 +1,13 @@
 import { Resource, databases } from "harperdb";
 
-const HighScoresTable = databases.yahtzee.HighScores
+const UsersTable = databases.wildscapes.User
 
-export class HighScores extends Resource {
+// This is how we can create custom endpoints in Harper
+export class Users extends Resource {
     static loadAsInstance = false;
 
     async get() {
-        const results = await HighScoresTable.get();
+        const results = await UsersTable.get();
         return {
             statusCode: 200,
             body: results,
@@ -17,7 +18,7 @@ export class HighScores extends Resource {
 
         const record = { ...data, createdAt: new Date().toISOString() };
         
-        await HighScoresTable.create(record);
+        await UsersTable.create(record);
         return {
             statusCode: 201,
             body: record,

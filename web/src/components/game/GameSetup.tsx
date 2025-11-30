@@ -8,7 +8,6 @@ import { BarChart3, Loader2 } from 'lucide-react';
 import type { Player, User } from '@/types/player';
 
 interface GameSetupProps {
-  // 🔑 include id so GameProvider can store dbPlayerId
   onStartGame: (
     players: { dbPlayerId: string; name: string; color: string }[],
     soloMode: boolean
@@ -94,7 +93,7 @@ export function GameSetup({ onStartGame }: GameSetupProps) {
     const players = Array.from({ length: playerCount }).map((_, i) => {
       const p = seatPlayers[i];
       return {
-        id: p?.id ?? `local-player-${i + 1}`, // safety fallback; shouldn't hit because of allSeatsHaveProfiles
+        dbPlayerId: p?.id ?? `local-player-${i + 1}`, // safety fallback; shouldn't hit because of allSeatsHaveProfiles
         name: p?.displayName || `Player ${i + 1}`,
         color: p?.colorTheme || FALLBACK_COLORS[i % FALLBACK_COLORS.length],
       };
